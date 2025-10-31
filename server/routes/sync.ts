@@ -87,7 +87,7 @@ syncRouter.post('/', async (req: AuthRequest, res) => {
     const discoveredCourses = new Set((courses || []).map(c => c.name));
 
     const isFirstSync = !settings.last_sync;
-    const emails = await fetchEmails();
+    const emails = await fetchEmails(userId);
 
     let emailsToProcess: GmailEmail[];
     if (isFirstSync) {

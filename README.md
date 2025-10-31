@@ -9,6 +9,7 @@ An intelligent mobile-first Progressive Web App for students to manage academic 
 ## Features
 
 - 🤖 **AI-Powered Email Parsing**: Automatically extracts tasks from professor emails using Gemini AI
+- 📧 **Gmail Integration**: Connect your Gmail to fetch real emails (OAuth 2.0)
 - 📅 **Canvas Integration**: Syncs assignments via iCal feeds
 - 📱 **Progressive Web App**: Install on mobile devices for native-like experience
 - 🔔 **Smart Notifications**: Get reminded of upcoming deadlines
@@ -63,10 +64,11 @@ VITE_API_URL=http://localhost:3001
 **Getting your credentials:**
 - **Gemini API Key**: Get it from [Google AI Studio](https://aistudio.google.com/apikey)
 - **Supabase credentials**: Create a project at [supabase.com](https://supabase.com) and find credentials in Project Settings > API
+- **Gmail OAuth** (Optional): See [GMAIL_OAUTH_SETUP.md](./GMAIL_OAUTH_SETUP.md) for full setup. If skipped, app uses mock email data.
 
 ### 3. Set Up Supabase Database
 
-Create the following tables in your Supabase project:
+Run the complete database schema in your Supabase SQL Editor. Copy the contents of [database-schema.sql](./database-schema.sql) or use the SQL below:
 
 ```sql
 -- Tasks table

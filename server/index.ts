@@ -6,6 +6,7 @@ import { pendingTasksRouter } from './routes/pending-tasks.js';
 import { coursesRouter } from './routes/courses.js';
 import { settingsRouter } from './routes/settings.js';
 import { syncRouter } from './routes/sync.js';
+import { authRouter } from './routes/auth.js';
 import { authMiddleware } from './middleware/auth.js';
 
 dotenv.config({ path: '.env.local' });
@@ -25,7 +26,9 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// API routes - all require authentication
+// API routes - all require authentication except OAuth callback
+app.use('/api/auth/gmail/callback', authRouter); // Public callback endpoint
+app.use('/api/auth', authMiddleware, authRouter); // Protected auth endpoints
 app.use('/api/tasks', authMiddleware, tasksRouter);
 app.use('/api/pending-tasks', authMiddleware, pendingTasksRouter);
 app.use('/api/courses', authMiddleware, coursesRouter);

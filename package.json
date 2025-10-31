@@ -14,25 +14,26 @@
     "start": "node dist/server/index.js"
   },
   "dependencies": {
-    "react": "^19.2.0",
     "@google/genai": "^1.27.0",
-    "react-dom": "^19.2.0",
-    "swr": "^2.3.6",
+    "@supabase/auth-helpers-react": "^0.5.0",
     "@supabase/supabase-js": "^2.78.0",
     "axios": "^1.7.9",
-    "@supabase/auth-helpers-react": "^0.5.0",
-    "express": "^4.21.1",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "express": "^4.21.1",
+    "googleapis": "^144.0.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "swr": "^2.3.6"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
-    "@types/express": "^5.0.0",
     "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0",
+    "concurrently": "^9.1.2",
     "tsx": "^4.19.2",
-    "concurrently": "^9.1.2"
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
   }
 }

@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Settings, View } from '../types';
 import Icon from './Icon';
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 import Loader from './Loader';
+import GmailConnect from './GmailConnect';
 
 interface SettingsViewProps {
     settings: Settings | undefined;
@@ -75,6 +75,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, setC
             </div>
         </div>
       </div>
+
+      <GmailConnect />
 
        <div className="bg-gray-800 rounded-lg p-4">
         <h3 className="text-lg font-semibold text-white mb-2">About & Reminders</h3>

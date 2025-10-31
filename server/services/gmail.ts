@@ -1,5 +1,6 @@
-// Server-side Gmail service
-// In a production app, this would use OAuth to fetch real emails from Gmail API
+import { google } from 'googleapis';
+import { oauth2Client, isGmailConfigured } from '../config/gmail.js';
+import { createClient } from '@supabase/supabase-js';
 
 export interface GmailEmail {
   id: string;
@@ -15,6 +16,7 @@ const daysAgo = (days: number): string => {
   return date.toISOString();
 };
 
+// Mock emails for when Gmail OAuth is not configured
 const mockEmails: GmailEmail[] = [
   {
     id: 'email1',
@@ -74,11 +76,136 @@ const mockEmails: GmailEmail[] = [
   }
 ];
 
-export const fetchEmails = (): Promise<GmailEmail[]> => {
-  console.log("Fetching emails (mock data)...");
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(mockEmails);
-    }, 500);
-  });
-};
+// Extract plain text from email body
+function decodeEmailBody(body: any): string {
+  if (!body) return '';
+
+  let data = body.data;
+  if (body.parts) {
+    // Multipart message - get text/plain part
+    const textPart = body.parts.find((part: any) => part.mimeType === 'text/plain');
+    if (textPart?.body?.data) {
+      data = textPart.body.data;
+    }
+  }
+
+  if (!data) return '';
+
+  // Decode base64url
+  const decoded = Buffer.from(data, 'base64url').toString('utf-8');
+  return decoded.trim();
+}
+
+// Fetch emails using real Gmail API
+async function fetchRealEmails(userId: string): Promise<GmailEmail[]> {
+  try {
+    const supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Get stored OAuth tokens
+    const { data: tokenData, error } = await supabase
+      .from('gmail_tokens')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !tokenData) {
+      console.log('No Gmail tokens found for user, using mock data');
+      return mockEmails;
+    }
+
+    // Check if token is expired
+    const now = Date.now();
+    const expiry = tokenData.token_expiry ? new Date(tokenData.token_expiry).getTime() : 0;
+
+    if (expiry && expiry < now && tokenData.refresh_token) {
+      // Refresh the token
+      oauth2Client.setCredentials({
+        refresh_token: tokenData.refresh_token,
+      });
+
+      const { credentials } = await oauth2Client.refreshAccessToken();
+
+      // Update stored tokens
+      await supabase
+        .from('gmail_tokens')
+        .update({
+          access_token: credentials.access_token,
+          token_expiry: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : null,
+        })
+        .eq('user_id', userId);
+
+      oauth2Client.setCredentials(credentials);
+    } else {
+      // Use existing token
+      oauth2Client.setCredentials({
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+      });
+    }
+
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
+    // Fetch messages from last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const query = `after:${Math.floor(thirtyDaysAgo.getTime() / 1000)}`;
+
+    const response = await gmail.users.messages.list({
+      userId: 'me',
+      q: query,
+      maxResults: 50,
+    });
+
+    const messages = response.data.messages || [];
+    const emails: GmailEmail[] = [];
+
+    // Fetch details for each message
+    for (const message of messages.slice(0, 20)) { // Limit to 20 most recent
+      try {
+        const details = await gmail.users.messages.get({
+          userId: 'me',
+          id: message.id!,
+          format: 'full',
+        });
+
+        const headers = details.data.payload?.headers || [];
+        const from = headers.find(h => h.name === 'From')?.value || '';
+        const subject = headers.find(h => h.name === 'Subject')?.value || '';
+        const dateHeader = headers.find(h => h.name === 'Date')?.value || '';
+        const body = decodeEmailBody(details.data.payload);
+
+        emails.push({
+          id: message.id!,
+          from,
+          subject,
+          body: body.substring(0, 2000), // Limit body length
+          date: dateHeader ? new Date(dateHeader).toISOString() : new Date().toISOString(),
+        });
+      } catch (err) {
+        console.error(`Error fetching message ${message.id}:`, err);
+      }
+    }
+
+    console.log(`Fetched ${emails.length} real emails from Gmail`);
+    return emails;
+  } catch (error) {
+    console.error('Error fetching real emails:', error);
+    return mockEmails;
+  }
+}
+
+export async function fetchEmails(userId?: string): Promise<GmailEmail[]> {
+  // If Gmail OAuth not configured or no user ID, use mock data
+  if (!isGmailConfigured() || !userId) {
+    console.log("Gmail OAuth not configured or no user ID, using mock data");
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(mockEmails), 500);
+    });
+  }
+
+  // Try to fetch real emails
+  return fetchRealEmails(userId);
+}

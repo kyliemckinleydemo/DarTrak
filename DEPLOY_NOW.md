@@ -25,6 +25,15 @@ CLIENT_URL=https://your-app.vercel.app
 PORT=3001
 ```
 
+**Optional - Gmail OAuth (Recommended):**
+```
+GMAIL_CLIENT_ID=your_gmail_client_id.apps.googleusercontent.com
+GMAIL_CLIENT_SECRET=GOCSPX-your_gmail_client_secret
+GMAIL_REDIRECT_URI=https://your-railway-url.up.railway.app/api/auth/gmail/callback
+```
+
+**Note:** If you skip Gmail OAuth, the app will use mock email data. See [GMAIL_OAUTH_SETUP.md](./GMAIL_OAUTH_SETUP.md) for full Gmail setup instructions.
+
 **Important:** Leave `CLIENT_URL` as a placeholder for now - we'll update it after deploying the frontend.
 
 ### 1.4 Get Your Backend URL
@@ -188,23 +197,53 @@ Your app is now live at:
 
 ## 🚀 Next Steps
 
-1. **Custom Domain** (Optional)
-   - Buy domain on Namecheap/Google Domains
-   - Add to Vercel in project settings
+### 1. Set Up Gmail OAuth (Highly Recommended)
 
-2. **Monitoring** (Recommended)
-   - Set up [Sentry](https://sentry.io) for error tracking
-   - Add analytics (Vercel Analytics is free)
+Currently, your app uses **mock email data** for demonstration. To enable real Gmail integration:
 
-3. **Real Email Integration**
-   - Set up Gmail OAuth in Google Cloud Console
-   - Replace mock data in `server/services/gmail.ts`
+**Why enable Gmail OAuth?**
+- ✅ Users connect their real Gmail accounts
+- ✅ AI parses actual professor emails
+- ✅ Automatic task extraction from real emails
+- ✅ Full functionality unlocked
 
-4. **Performance**
-   - Enable Vercel Analytics
-   - Add caching headers
-   - Optimize images
+**How to set it up:**
+1. Takes about 15-20 minutes
+2. Follow the detailed guide: **[GMAIL_OAUTH_SETUP.md](./GMAIL_OAUTH_SETUP.md)**
+3. Get credentials from Google Cloud Console (free)
+4. Add to Railway environment variables
+5. Run new database schema in Supabase
+
+**If you skip this:**
+- App works but uses mock professor emails
+- Canvas integration still provides real automation
+- Users can still add tasks manually
+
+### 2. Custom Domain (Optional)
+- Buy domain on Namecheap/Google Domains
+- Add to Vercel in project settings
+- Update `CLIENT_URL` in Railway
+
+### 3. Monitoring (Recommended)
+- Set up [Sentry](https://sentry.io) for error tracking
+- Add analytics (Vercel Analytics is free)
+- Monitor Railway logs regularly
+
+### 4. Performance Optimization
+- Enable Vercel Analytics
+- Add caching headers
+- Optimize images
+- Monitor API usage
 
 ---
 
-Need help? Check the main [DEPLOYMENT.md](./DEPLOYMENT.md) for more detailed information.
+## 📚 Additional Resources
+
+- **Gmail OAuth Setup**: [GMAIL_OAUTH_SETUP.md](./GMAIL_OAUTH_SETUP.md)
+- **Database Schema**: [database-schema.sql](./database-schema.sql)
+- **Detailed Deployment Guide**: [DEPLOYMENT.md](./DEPLOYMENT.md)
+- **Main README**: [README.md](./README.md)
+
+---
+
+Need help? Check the guides above or open an issue on GitHub.
