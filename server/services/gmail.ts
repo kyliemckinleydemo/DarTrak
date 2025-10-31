@@ -1,14 +1,12 @@
-// IMPORTANT: This is a server-side only module.
-// It simulates fetching data from the Google Gmail API.
-// In a real application, this file would contain the logic to use
-// a user's OAuth token to securely fetch their emails.
+// Server-side Gmail service
+// In a production app, this would use OAuth to fetch real emails from Gmail API
 
 export interface GmailEmail {
   id: string;
   from: string;
   subject: string;
   body: string;
-  date: string; // ISO String date
+  date: string;
 }
 
 const daysAgo = (days: number): string => {
@@ -32,7 +30,7 @@ const mockEmails: GmailEmail[] = [
     body: `Hello everyone, for our next class on Monday, please read Chapter 5 of "Algorithms Unlocked". We will be discussing Big O notation in depth. There will be a short quiz at the beginning of class covering the reading material. See you then.`,
     date: daysAgo(5),
   },
-   {
+  {
     id: 'email3',
     from: 'ta.sarah@dartmouth.edu',
     subject: 'Calculus II - Homework 4 due date',
@@ -58,14 +56,14 @@ const mockEmails: GmailEmail[] = [
     from: 'prof.roberts@dartmouth.edu',
     subject: 'PHYS 101 - Weekly Reading',
     body: `For this week, please ensure you have read Chapter 8 in the textbook on Thermodynamics before our Wednesday lecture.`,
-    date: daysAgo(25), // Older than 3 weeks
+    date: daysAgo(25),
   },
   {
     id: 'email7',
     from: 'dean.office@dartmouth.edu',
     subject: 'Important: Final Exam Schedule',
     body: `The final exam schedule has been posted. Your PHYS 101 exam is on Dec 12th at 9 AM. Your CS 256 exam is on Dec 14th at 2 PM.`,
-    date: daysAgo(30), // Older than 3 weeks
+    date: daysAgo(30),
   },
   {
     id: 'email8',
@@ -76,12 +74,11 @@ const mockEmails: GmailEmail[] = [
   }
 ];
 
-// In a real implementation, this would be an async function making a call to the Gmail API
 export const fetchEmails = (): Promise<GmailEmail[]> => {
-  console.log("Fetching emails from server-side googleApiService (mock)...")
+  console.log("Fetching emails (mock data)...");
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(mockEmails);
-    }, 500); // Simulate network latency
+    }, 500);
   });
 };

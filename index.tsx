@@ -313,8 +313,8 @@ function Home() {
   return <MainApp />;
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabaseClient = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 const App = () => {
@@ -328,9 +328,9 @@ const App = () => {
           <h1 className="text-xl font-bold mb-2">Application Configuration Error</h1>
           <p>The application could not connect to the backend service.</p>
           <p className="text-xs text-gray-500 mt-4" style={{ textAlign: 'left', fontFamily: 'monospace' }}>
-            Ensure the following environment variables are set in your deployment platform (e.g., Vercel):<br/>
-            - NEXT_PUBLIC_SUPABASE_URL<br/>
-            - NEXT_PUBLIC_SUPABASE_ANON_KEY
+            Ensure the following environment variables are set in your .env.local file:<br/>
+            - VITE_SUPABASE_URL<br/>
+            - VITE_SUPABASE_ANON_KEY
           </p>
         </div>
       </div>

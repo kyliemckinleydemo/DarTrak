@@ -1,53 +1,51 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { Task, TaskType } from '../types';
-import { GmailEmail } from "./googleApiService";
+import { Task, TaskType } from '../../types.js';
+import { GmailEmail } from './gmail.js';
 
-// This function assumes process.env.API_KEY is available
-// In a real browser environment, this key should be handled securely, typically via a backend proxy.
 const getAiClient = () => {
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) {
-        // In a real app, you might show a more user-friendly error.
-        throw new Error("API_KEY environment variable not set.");
-    }
-    return new GoogleGenAI({ apiKey });
-}
-
-const responseSchema = {
-    type: Type.ARRAY,
-    items: {
-      type: Type.OBJECT,
-      properties: {
-        title: {
-          type: Type.STRING,
-          description: "The title of the assignment or task.",
-        },
-        course: {
-          type: Type.STRING,
-          description: "The course name or subject for the task.",
-        },
-        dueDate: {
-          type: Type.STRING,
-          description: "The due date of the task in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ). Infer the full date and time. Assume the current year.",
-        },
-        type: {
-          type: Type.STRING,
-          description: `The type of task. Must be one of: ${Object.values(TaskType).join(', ')}.`,
-        },
-      },
-      required: ["title", "course", "dueDate", "type"],
-    },
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY environment variable not set.");
+  }
+  return new GoogleGenAI({ apiKey });
 };
 
+const responseSchema = {
+  type: Type.ARRAY,
+  items: {
+    type: Type.OBJECT,
+    properties: {
+      title: {
+        type: Type.STRING,
+        description: "The title of the assignment or task.",
+      },
+      course: {
+        type: Type.STRING,
+        description: "The course name or subject for the task.",
+      },
+      dueDate: {
+        type: Type.STRING,
+        description: "The due date of the task in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ). Infer the full date and time. Assume the current year.",
+      },
+      type: {
+        type: Type.STRING,
+        description: `The type of task. Must be one of: ${Object.values(TaskType).join(', ')}.`,
+      },
+    },
+    required: ["title", "course", "dueDate", "type"],
+  },
+};
+
+import { retryWithBackoff } from '../utils/retry.js';
 
 export const extractTasksFromEmails = async (emails: GmailEmail[]): Promise<Partial<Task>[]> => {
   if (emails.length === 0) {
     return [];
   }
 
-  try {
+  return retryWithBackoff(async () => {
     const ai = getAiClient();
-    
+
     const systemInstruction = `You are a highly intelligent assistant for a busy college student. Your sole purpose is to accurately parse academic-related emails and extract tasks, deadlines, and other important information. You must be meticulous and precise. Always return data in the requested JSON format.`;
 
     const emailBatchContent = emails.map((email, index) => `
@@ -57,7 +55,6 @@ export const extractTasksFromEmails = async (emails: GmailEmail[]): Promise<Part
       Body: ${email.body}
       --- End of Email ${index + 1} ---
     `).join('\n\n');
-
 
     const prompt = `
       Please analyze the following batch of emails from professors, TAs, or university announcement systems. Your task is to extract all academic tasks, such as assignments, prep work, reading, quizzes, or study reminders from ALL emails provided.
@@ -75,13 +72,13 @@ export const extractTasksFromEmails = async (emails: GmailEmail[]): Promise<Part
     `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-          systemInstruction: systemInstruction,
-          responseMimeType: "application/json",
-          responseSchema: responseSchema,
-        },
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction: systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: responseSchema,
+      },
     });
 
     const jsonText = response.text.trim();
@@ -89,12 +86,19 @@ export const extractTasksFromEmails = async (emails: GmailEmail[]): Promise<Part
 
     const extractedData = JSON.parse(jsonText);
 
-    // Success, return the data
     return Array.isArray(extractedData) ? extractedData : [];
+  }, {
+    maxRetries: 2,
+    initialDelay: 1000,
+    maxDelay: 5000,
+  }).catch((error: any) => {
+    console.error("Gemini API error:", error);
 
-  } catch (error: any) {
-    console.error("An unexpected error occurred with the Gemini API:", error);
-    // On a paid plan, rate limit errors are less common. Provide a more general error message.
+    // Better error handling
+    if (error.status === 429) {
+      throw new Error("API rate limit exceeded. Please try again in a few moments.");
+    }
+
     throw new Error("Sync failed due to an API error. Please check your connection or try again later.");
-  }
+  });
 };
