@@ -1,0 +1,18 @@
+{
+  "short_name": "DarTrak",
+  "name": "DarTrak",
+  "description": "An intelligent mobile-first application for Dartmouth students to manage tasks.",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#111827",
+  "background_color": "#111827"
+}
